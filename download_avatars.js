@@ -2,10 +2,15 @@
 // request and secrets require
 var request = require('request');
 var token = require('./secrets');
+var func = require('./functions');
 
 // we retrieve the username and repo that will have the images downloaded
 var username = process.argv[2];
 var repo = process.argv[3];
+var folder = 'avatars';
+
+// if the folder doesnt exist, we create it
+func.checkFolder(folder);
 
 console.log('Welcome to the Github Avatar Downloader!');
 
@@ -27,24 +32,6 @@ function getRepoContributors(repoOwner, repoName, cb) {
 
 }
 
-// function that check if the folder exist
-// and if doesnt, it's created
-function checkFolder(folder) {
-
-  var fs = require('fs');
-  var result = true;
-  fs.exists(folder, function(exists) {
-    if (!exists) {
-      fs.mkdir(folder, function(err){
-        if (err) {
-          console.log(err);
-        }
-      })
-    }
-  });
-
-}
-
 // function to show the results of the github API
 function showInfo(err, body) {
 
@@ -59,9 +46,6 @@ function showInfo(err, body) {
 
   // parsing of the JSON data to array
   content = JSON.parse(body);
-
-  // if the folder doesnt exist, we create it
-  checkFolder(folder);
 
   // we loop the array retrieving the avatar link to the image of the user
   content.forEach(function(item){
