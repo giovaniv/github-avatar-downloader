@@ -1,9 +1,18 @@
+
+// we retrieve the username and repo that will have the images downloaded
+var username = process.argv[2];
+var repo = process.argv[3];
+
+// request and secrets require
 var request = require('request');
 var token = require('./secrets');
+
 console.log('Welcome to the Github Avatar Downloader!');
 
+// function to retrieves all the contributors data of a github username and repo
 function getRepoContributors(repoOwner, repoName, cb) {
 
+  // URL, user-agent and TOKEN to validate our request
   var options = {
     url : "https://api.github.com/repos/" + repoOwner + "/" + repoName + "/contributors",
     headers : {
@@ -18,28 +27,49 @@ function getRepoContributors(repoOwner, repoName, cb) {
 
 }
 
+// function to show the results of the github API
 function showInfo(err, body) {
 
   var content;
   var fullPath = '';
 
+  // console of any error during the process
   if (err) {
     console.log(err);
   }
 
+  // parsing of the JSON data to array
   content = JSON.parse(body);
 
+  // we loop the array retrieving the avatar link to the image of the user
   content.forEach(function(item){
     fullPath = 'avatars/' + item.login + '.jpg';
     downloadImageByURL(item.avatar_url,fullPath);
   });
 }
 
+// function to download the github avatar image
 function downloadImageByURL(url, filePath) {
   var fs = require('fs');
-  console.log(url);
-  console.log(filePath);
+  request.get(url)
+              .on('error', function(err) {
+                throw err;
+              })
+              .on('response', function(response) {
+                console.log('Downloading image...');
+              })
+              .on('end', function() {
+                console.log('Download complete.');
+              })
+              .pipe(fs.createWriteStream(filePath));
 }
 
-//getRepoContributors('nodejs','node',showInfo);
-getRepoContributors('lighthouse-labs','blockchain-resources',showInfo)
+// function execution
+if (!username || !repo) {
+  console.log('Please define a github username and repo first like the sample above:');
+  console.log('<program_name> <username> <repo>');
+}
+else {
+  getRepoContributors(username,repo,showInfo)
+}
+
